@@ -1,0 +1,12 @@
+---
+- version: v1alpha1
+  group: amazee.io
+  kind: RedisService
+  playbook: /opt/ansible/playbook.yaml
+  vars:
+    state: present
+  finalizer:
+    name: finalizer.redisservice.amazee.io/v1alpha1
+    playbook: /opt/ansible/playbook.yaml
+    vars:
+      state: absent

@@ -1,0 +1,72 @@
+---
+
+- name: Verify
+  hosts: localhost
+  connection: local
+  vars:
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'   
+  tasks:
+
+    - name: Lookup RedisService Custom Resource
+      set_fact:
+        cr: '{{ lookup("k8s", api_version="amazee.io/v1alpha1", kind="RedisService", namespace=namespace, resource_name="lagoon-raas") }}'
+    - debug: var=cr
+
+    - name: Test RedisService Custom Resource
+      assert:  
+        that: 
+          - cr.spec.redis_host_external is defined
+          - cr.spec.redis_host_internal is defined
+          - cr.spec.redis_port is defined
+          - cr.spec.redis_cache_key_prefix is defined
+
+    - name: Lookup Redis Internal Service
+      set_fact:
+        service: '{{ lookup("k8s", api_version="v1", kind="Service", namespace=namespace, resource_name=cr.spec.redis_host_internal) }}'
+    - debug: var=service
+
+    - name: Test Redis Internal Service
+      assert:
+        that:
+          - service.spec.externalName == cr.spec.redis_host_external
+          - service.spec.type == "ExternalName"
+
+    - name: Lookup lagoon-env ConfigMap
+      set_fact:
+        cm: '{{ lookup("k8s", api_version="v1", kind="ConfigMap", namespace=namespace, resource_name="lagoon-env") }}'
+    - debug: var=cm
+
+    - name: Test lagoon-env updates
+      assert:
+        that: 
+            - cm.data.REDIS_HOST == cr.spec.redis_host_internal
+            - cm.data.REDIS_SERVICE_PORT == cr.spec.redis_port
+            - cm.data.REDIS_CACHE_PREFIX == cr.spec.redis_cache_key_prefix
+            - cm.data.LAGOON_PROJECT == "{{ namespace }}"
+
+    - name: Delete Custom Resource
+      k8s:
+        state: "absent"
+        api_version: amazee.io/v1alpha1
+        kind: RedisService
+        namespace: "{{ namespace }}"
+        name: lagoon-raas
+        wait: yes
+
+    - name: Check Redis Internal Service has been deleted
+      assert:
+        that:
+          - lookup("k8s", api_version="v1", kind="Service", namespace=namespace, resource_name=cr.spec.redis_host_internal) | length == 0
+
+    - name: Lookup lagoon-env ConfigMap
+      set_fact:
+        cm: '{{ lookup("k8s", api_version="v1", kind="ConfigMap", namespace=namespace, resource_name="lagoon-env") }}'
+    - debug: var=cm
+
+    - name: Test Redis service information has been removed from lagoon-env
+      assert:
+        that:
+            - cm.data.REDIS_HOST is not defined
+            - cm.data.REDIS_SERVICE_PORT is not defined
+            - cm.data.REDIS_CACHE_PREFIX is not defined
+            - cm.data.LAGOON_PROJECT == "{{ namespace }}"

@@ -1,0 +1,84 @@
+- hosts: localhost
+  gather_facts: no
+  tasks:
+
+  - fail:
+      msg: 'Environment variables REDIS_HOST or REDIS_PORT not defined'
+    when: (item is not defined) or (item | length == 0)
+    with_items:
+      - "{{ lookup('env','REDIS_HOST') }}"
+      - "{{ lookup('env','REDIS_PORT') }}"
+
+  - set_fact:
+      redis_host_external: "{{ redis_host | default(lookup('env','REDIS_HOST'), true) }}"
+  - set_fact:
+      redis_host_internal: "{{ redis_host_internal | default ('redis-' + lookup('password', '/tmp/_host chars=ascii_letters,digits'), true) | lower }}"
+  - set_fact:
+      redis_port: "{{ redis_port | default(lookup('env','REDIS_PORT'), true) }}"
+  - set_fact:
+      redis_cache_key_prefix: "{{ redis_cache_key_prefix | default (meta.namespace + '-' + lookup('password', '/tmp/_key_prefix length=6 chars=ascii_letters'), true) }}"
+
+  - vars:
+      msg: |
+        Applying operator configuration with the following values:
+        
+        Redis host (external):    {{ redis_host_external }}
+        Redis host (internal):    {{ redis_host_internal }}
+        Redis port:               {{ redis_port }}
+        Redis cache key prefix:   {{ redis_cache_key_prefix }}
+    debug:
+      msg: "{{ msg.split('\n') }}"
+
+  - name: Update Custom Resource spec
+    k8s:
+      state: "{{ state }}"
+      api_version: amazee.io/v1alpha1
+      kind: RedisService
+      namespace: "{{ meta.namespace }}"
+      name: lagoon-raas
+      definition:
+        spec:
+          redis_host_external: "{{ redis_host_external }}"
+          redis_host_internal: "{{ redis_host_internal }}"
+          redis_port: "{{ redis_port }}"
+          redis_cache_key_prefix: "{{ redis_cache_key_prefix }}"
+
+  - name: Provision OpenShift service
+    k8s_service:
+      state: "{{ state }}"
+      namespace: "{{ meta.namespace }}"
+      name: "{{ redis_host_internal }}"
+      type: ExternalName
+      definition:
+        spec:
+          externalName: "{{ redis_host_external }}"
+
+  - name: Add Redis service information to lagoon-env
+    k8s:
+      api_version: v1
+      kind: ConfigMap
+      namespace: "{{ meta.namespace }}"
+      name: lagoon-env
+      definition:
+        data:
+          REDIS_HOST: "{{ redis_host_internal }}"
+          REDIS_SERVICE_PORT: "{{ redis_port }}"
+          REDIS_CACHE_PREFIX: "{{ redis_cache_key_prefix }}"
+    when: 'state == "present"'
+
+  - name: Unset Redis service information in lagoon-env
+    k8s:
+      state: present
+      api_version: v1
+      kind: ConfigMap
+      namespace: "{{ meta.namespace }}"
+      name: lagoon-env
+      definition:
+        data:
+          REDIS_HOST: null
+          REDIS_SERVICE_PORT: null
+          REDIS_CACHE_PREFIX: null
+    when: 'state == "absent"'
+
+  - debug: var=state
+  

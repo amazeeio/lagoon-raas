@@ -1,0 +1,9 @@
+apiVersion: amazee.io/v1alpha1
+kind: RedisService
+metadata:
+  name: lagoon-raas
+spec:
+  # redis_host_external:
+  # redis_host_internal:
+  # redis_port:
+  # redis_cache_key_prefix:

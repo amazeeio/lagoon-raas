@@ -1,0 +1,12 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: lagoon-raas
+subjects:
+- kind: ServiceAccount
+  name: lagoon-raas
+  namespace: lagoon-raas
+roleRef:
+  kind: ClusterRole
+  name: lagoon-raas
+  apiGroup: rbac.authorization.k8s.io
