@@ -79,5 +79,3 @@
           REDIS_SERVICE_PORT: null
           REDIS_CACHE_PREFIX: null
     when: 'state == "absent"'
-
-  - debug: var=state
