@@ -4,5 +4,4 @@ language: python
 install:
   - pip3 install docker molecule openshift jmespath
 script:
-  - molecule test -s test-local
-  
+  - make test
