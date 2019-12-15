@@ -4,7 +4,7 @@
   hosts: localhost
   connection: local
   vars:
-    ansible_python_interpreter: '{{ ansible_playbook_python }}'   
+    ansible_python_interpreter: '{{ ansible_playbook_python }}'
   tasks:
 
     - name: Lookup RedisService Custom Resource
@@ -13,8 +13,8 @@
     - debug: var=cr
 
     - name: Test RedisService Custom Resource
-      assert:  
-        that: 
+      assert:
+        that:
           - cr.spec.redis_host_external is defined
           - cr.spec.redis_host_internal is defined
           - cr.spec.redis_port is defined
@@ -38,7 +38,7 @@
 
     - name: Test lagoon-env updates
       assert:
-        that: 
+        that:
             - cm.data.REDIS_HOST == cr.spec.redis_host_internal
             - cm.data.REDIS_SERVICE_PORT == cr.spec.redis_port
             - cm.data.REDIS_CACHE_PREFIX == cr.spec.redis_cache_key_prefix

@@ -112,7 +112,8 @@
 
     - debug: var=log.stdout_lines
 
-    - fail:
+    - name: Failed on action
+      fail:
         msg: "Failed on action: converge"
 
 - import_playbook: '{{ playbook_dir }}/../default/asserts.yml'

@@ -38,10 +38,10 @@ uninstall: ## Uninstall all that all performed in the $ make install
 	- ${K8S_CLI} delete namespace ${NAMESPACE}
 
 test:
-	- molecule test -s test-local
+	molecule test -s test-local
 
 converge:
-	- molecule converge -s test-local
+	molecule converge -s test-local
 
 .PHONY: build help
 help:  ## Display this help
