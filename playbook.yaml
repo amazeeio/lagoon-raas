@@ -35,7 +35,7 @@
       api_version: amazee.io/v1alpha1
       kind: RedisService
       namespace: "{{ meta.namespace }}"
-      name: lagoon-raas
+      name: "{{ meta.name }}"
       definition:
         spec:
           redis_host_external: "{{ redis_host_external }}"
@@ -81,4 +81,3 @@
     when: 'state == "absent"'
 
   - debug: var=state
-  
