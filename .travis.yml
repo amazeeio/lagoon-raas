@@ -15,10 +15,6 @@ jobs:
     env: K8S_VERSION=1.12
   - name: "Kubernetes 1.11"
     env: K8S_VERSION=1.11
-  - name: "Kubernetes 1.10"
-    env: K8S_VERSION=1.10
-  - name: "Kubernetes 1.9"
-    env: K8S_VERSION=1.9
 install:
   - pip3 install docker molecule openshift jmespath
 script:
