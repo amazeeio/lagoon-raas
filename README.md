@@ -1,5 +1,7 @@
 # Lagoon Redis as a Service Operator
 
+[![Build Status](https://travis-ci.org/amazeeio/lagoon-raas.svg?branch=master)](https://travis-ci.org/amazeeio/lagoon-raas)
+
 ## Overview
 
 The Lagoon Redis as a Service operator allows a project to setup a redis service that points to a shared redis host.
