@@ -53,6 +53,14 @@
         spec:
           externalName: "{{ redis_host_external }}"
 
+  - name: Check for lagoon-env Configmap
+    k8s_info:
+      api_version: v1
+      kind: ConfigMap
+      name: lagoon-env
+      namespace: "{{ meta.namespace }}"
+    register: lagoon_env
+
   - name: Add Redis service information to lagoon-env
     k8s:
       api_version: v1
@@ -64,7 +72,9 @@
           REDIS_HOST: "{{ redis_host_internal }}"
           REDIS_SERVICE_PORT: "{{ redis_port }}"
           REDIS_CACHE_PREFIX: "{{ redis_cache_key_prefix }}"
-    when: 'state == "present"'
+    when:
+      - 'state == "present"'
+      - lagoon_env.resources | length > 0
 
   - name: Unset Redis service information in lagoon-env
     k8s:
@@ -78,4 +88,6 @@
           REDIS_HOST: null
           REDIS_SERVICE_PORT: null
           REDIS_CACHE_PREFIX: null
-    when: 'state == "absent"'
+    when:
+      - 'state == "absent"'
+      - lagoon_env.resources | length > 0

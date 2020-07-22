@@ -2,7 +2,7 @@
 SHELL:=/bin/bash
 NAMESPACE=lagoon-raas
 K8S_CLI=oc
-IMAGE=8thom/lagoon-raas:v0.0.1
+IMAGE=8thom/lagoon-raas:v0.0.2
 
 ##@ Application
 
