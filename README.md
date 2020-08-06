@@ -47,6 +47,8 @@ NAME                           READY   STATUS    RESTARTS   AGE
 lagoon-raas-78467d8f64-trmsj   2/2     Running   0          22s
 ```
 
+Update the `REDIS_HOST` and `REDIS_PORT` environment variables on the operator deployment with the default values of a shared redis cluster.
+
 ### Uninstalling 
 
 To uninstall all that was performed in the above step run `make uninstall`.
