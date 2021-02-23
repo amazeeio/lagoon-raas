@@ -48,7 +48,7 @@
           redis_password: "{{ redis_password }}"
           redis_cache_key_prefix: "{{ redis_cache_key_prefix }}"
 
-  - name: Provision OpenShift service
+  - name: Provision Internal service
     k8s_service:
       state: "{{ state }}"
       namespace: "{{ meta.namespace }}"
