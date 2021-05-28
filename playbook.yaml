@@ -3,11 +3,12 @@
   tasks:
 
   - fail:
-      msg: 'Environment variables REDIS_HOST or REDIS_PORT not defined'
+      msg: 'Environment variables REDIS_HOST, REDIS_PORT or REDIS_PASSWORD not defined'
     when: (item is not defined) or (item | length == 0)
     with_items:
       - "{{ lookup('env','REDIS_HOST') }}"
       - "{{ lookup('env','REDIS_PORT') }}"
+      - "{{ lookup('env','REDIS_PASSWORD') }}"
 
   - set_fact:
       redis_host_external: "{{ redis_host | default(lookup('env','REDIS_HOST'), true) }}"
@@ -15,6 +16,8 @@
       redis_host_internal: "{{ redis_host_internal | default ('redis-' + lookup('password', '/tmp/_host chars=ascii_letters,digits'), true) | lower }}"
   - set_fact:
       redis_port: "{{ redis_port | default(lookup('env','REDIS_PORT'), true) }}"
+  - set_fact:
+      redis_password: "{{ redis_password | default(lookup('env','REDIS_PASSWORD'), true) }}"
   - set_fact:
       redis_cache_key_prefix: "{{ redis_cache_key_prefix | default (meta.namespace + '-' + lookup('password', '/tmp/_key_prefix length=6 chars=ascii_letters'), true) }}"
 
@@ -25,6 +28,7 @@
         Redis host (external):    {{ redis_host_external }}
         Redis host (internal):    {{ redis_host_internal }}
         Redis port:               {{ redis_port }}
+        Redis password:           {{ redis_password }}
         Redis cache key prefix:   {{ redis_cache_key_prefix }}
     debug:
       msg: "{{ msg.split('\n') }}"
@@ -41,9 +45,10 @@
           redis_host_external: "{{ redis_host_external }}"
           redis_host_internal: "{{ redis_host_internal }}"
           redis_port: "{{ redis_port }}"
+          redis_password: "{{ redis_password }}"
           redis_cache_key_prefix: "{{ redis_cache_key_prefix }}"
 
-  - name: Provision OpenShift service
+  - name: Provision Internal service
     k8s_service:
       state: "{{ state }}"
       namespace: "{{ meta.namespace }}"
@@ -71,6 +76,7 @@
         data:
           REDIS_HOST: "{{ redis_host_internal }}"
           REDIS_SERVICE_PORT: "{{ redis_port }}"
+          REDIS_PASSWORD: "{{ redis_password }}"
           REDIS_CACHE_PREFIX: "{{ redis_cache_key_prefix }}"
     when:
       - 'state == "present"'
@@ -87,6 +93,7 @@
         data:
           REDIS_HOST: null
           REDIS_SERVICE_PORT: null
+          REDIS_PASSWORD: null
           REDIS_CACHE_PREFIX: null
     when:
       - 'state == "absent"'
